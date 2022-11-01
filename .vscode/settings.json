@@ -1,0 +1,15 @@
+{
+    "cSpell.words": [
+        "initid",
+        "negflag",
+        "strlwr"
+    ],
+    "files.associations": {
+        "*.ejs": "html",
+        "string": "cpp",
+        "sstream": "cpp",
+        "algorithm": "cpp",
+        "cstdlib": "cpp",
+        "cstring": "cpp"
+    }
+}
