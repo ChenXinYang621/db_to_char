@@ -22,7 +22,12 @@ MySQL 的参数输入转化到 mysql.h 是跟注释不一样的
 # -o 指定输出文件格式和地址
 # -shared 表示动态库
 g++ -I "C:\Program Files\MySQL\MySQL Server 8.0\include"  -o "C:\Program Files\MySQL\MySQL Server 8.0\lib\plugin\to_char.dll" -shared -fpic  .\main.cpp
+
+# ubuntu 编译
+g++ -I /usr/include/mysql  -o /usr/lib/mysql/plugin/to_char.so -shared -fpic  1.cpp
 ```
+
+某个傻逼错误困扰了我半天
 
 ## 感悟
 
