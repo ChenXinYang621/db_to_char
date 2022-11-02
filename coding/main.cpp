@@ -18,6 +18,8 @@ bool to_char_init(UDF_INIT *initid, UDF_ARGS *args, char *message);
 
 // 整数部分的位数
 int number_int = 0;
+// 第二个参数整数部分
+int number_int2 = 0;
 // 小数部分的位数
 int number_double = 0;
 // 判断负数情况
@@ -112,6 +114,9 @@ void convert_str(char *str, char *result) {
 
 void convert_str(char *str1, char *str2, char *result) {}
 
+// 检查是否存在非法条件数
+bool str_check(string str) {}
+
 bool fmt_check(string str) {
     // 判断格式化输出格式是否符合标准
     // 转为小写，方便进行判断
@@ -123,18 +128,86 @@ bool fmt_check(string str) {
     int cnt_0 = count(str.begin(), str.end(), '0');
     int cnt_9 = count(str.begin(), str.end(), '9');
 
-    // int cnt_mi = count(str.begin(), str.end(), "mi");
-    // int cnt_pr = count(str.begin(), str.end(), "pr");
+    // 通过 find 方法统计 "mi" 和 "pr"
+    int i = 0;
+    int cnt_mi = 0;
+    int length = str.length();
+    while (str.find("mi", i) != string::npos) {
+        cnt_mi++;
+        i = str.find("mi", i) + 1;
+    }
+    int cnt_pr = 0;
+    while (str.find("pr", i) != string::npos) {
+        cnt_pr++;
+        i = str.find("pr", i) + 1;
+    }
 
-    // // 各种限制条件的判断
-    // if (cnt_s > 1 || cnt_mi > 1 || cnt_pr > 1 || dollar_flag > 1 || cnt_d > 1
-    // ||
-    //     cnt_dot > 1 || (cnt_dot == cnt_d == 1) || (cnt_s == cnt_mi == 1) ||
-    //     (cnt_s == cnt_pr == 1) || (cnt_mi == cnt_pr == 1)) {
-    //     return false;
+    if (cnt_dot) {
+        dot_position2 = str.find(".");
+    } else if (cnt_d) {
+        dot_position2 = str.find("d");
+    }
+
+    // 各种限制条件的判断
+    if (cnt_s > 1 || cnt_mi > 1 || cnt_pr > 1 || dollar_flag > 1 || cnt_d > 1 ||
+        cnt_dot > 1 || (cnt_dot == cnt_d == 1) || (cnt_s == cnt_mi == 1) ||
+        (cnt_s == cnt_pr == 1) || (cnt_mi == cnt_pr == 1)) {
+        return false;
+    }
+
+    // 统计整数部分的数量
+    for (int i = 0; str[i] != 'd' || str[i] != '.'; i++) {
+        if (str[i] == '9' || str[i] == '0') {
+            number_int2++;
+        }
+    }
+
+    // 正确的字母
+    char right_letter[5] = {'0', '9', '$', '.', 'd'};
+
+    // for (int i = 0; i < str.length(); i++) {
+    //     if (i != 0) {
+    //         if (str[i] == '$') {
+    //             continue;
+    //         }
+    //     } else if (i == 0) {
+    //         if (str[i] == 'S') {
+    //         }
+    //     }
     // }
+
     // if (cnt_s == 1) {
     // }
+    int start = 0;
+    int end = length;
+    if (cnt_s == 1) {
+        if (str.find("s") == 0) {
+            start++;
+        } else if (str.find("s") == length - 1) {
+            end--;
+        } else {
+            return false;
+        }
+    }
+    if (cnt_pr == 1) {
+        if (str.find("pr") == length - 2) {
+            end -= 2;
+        } else {
+            return false;
+        }
+    }
+    if (cnt_mi == 1) {
+        if (str.find("mi") == length - 2) {
+            end -= 2;
+        } else {
+            return false;
+        }
+    }
+    // for (int i = start; i < end; i++) {
+    //     int j = 0;
+    //     for (j = 0; j <)
+    // }
+
     return true;
 }
 
