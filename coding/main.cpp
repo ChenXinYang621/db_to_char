@@ -1,9 +1,7 @@
 // 在 Path 中引入 MySQL 相关库
 #include <mysql.h>
-#include <mysql_com.h>
 
 #include <algorithm>
-#include <cstdlib>
 #include <cstring>
 #include <string>
 using namespace std;
@@ -12,8 +10,8 @@ using namespace std;
 // 可以通过 UDF 扩充 MySQL 的功能，加入一个新的 SQL 函数类似于内置的函数
 extern "C" {
 // 主函数，char * 对应 SQL STRING
-char *to_char(UDF_INIT *initid, UDF_ARGS *args, unsigned char *is_null,
-              char *message, unsigned long *length);
+char *to_char(UDF_INIT *initid, UDF_ARGS *args, char *result,
+              unsigned long *length, char *is_null, char *error);
 // 初始化函数
 bool to_char_init(UDF_INIT *initid, UDF_ARGS *args, char *message);
 }
@@ -202,24 +200,28 @@ bool to_char_init(UDF_INIT *initid, UDF_ARGS *args, char *message) {
 
     args_count = args->arg_count;
 
-    if (args_count > 2) {
+    if (args_count > 2 || args_count < 1) {
         strcpy(message,
                "wrong number of the args: to_char() requires one or two "
                "arguments");
         return true;
     }
 
+    // string 或 num
     if (args->arg_type[0] == Item_result::STRING_RESULT) {
         is_string = 1;
-    } else if (args->arg_type[0] == INT_RESULT ||
-               args->arg_type[1] == DECIMAL_RESULT) {
+    } else {
         is_num = 1;
     }
-    args->arg_type[0] = STRING_RESULT;
+    if (args_count == 2 && args->arg_type[1] != Item_result::STRING_RESULT) {
+        strcpy(message, "wrong type of the args: the second need to be string");
+        return true;
+    }
+    args->arg_type[0] = Item_result::STRING_RESULT;
     return false;
 }
 
-void convert(char *str, char *result) {
+void convert_str(char *str, char *result) {
     if (is_string) {
         strcpy(result, str);
     } else {
@@ -229,7 +231,7 @@ void convert(char *str, char *result) {
 
         char *pos_str = str;
         char *pos_result = result;
-        // 最后一个位置
+        // str 最后一个位置
         char *pos_str_end = str + length - 1;
 
         for (int i = 0; i < length; i++) {
@@ -238,15 +240,23 @@ void convert(char *str, char *result) {
                 break;
             }
         }
-        // 对浮点数去除末尾 0
+        // 对浮点数去除末尾 0/' '
         if (cnt) {
-            // 去除末尾的 0 一直到非零数字或者 '.'
-            while (*pos_str_end == '.' || *pos_str_end == '0') {
+            // 去除末尾的 0/' ' 一直到非零数字或者'.'
+            while (*pos_str_end == ' ' || *pos_str_end == '.' ||
+                   *pos_str_end == '0') {
                 pos_str_end--;
+                if (*(pos_str_end + 1) == '.') {
+                    break;
+                }
             }
         }
         pos_str_end++;
 
+        // 去除前面的空格
+        while (*pos_str == ' ') {
+            pos_str++;
+        }
         // 有 '-' 需要额外赋值
         if (*pos_str == '-') {
             *pos_result = *pos_str;
@@ -270,40 +280,28 @@ void convert(char *str, char *result) {
     }
 }
 
-void convert(char *str1, char *str2, char *result) {
+void convert_str(char *str1, char *str2, char *result) {}
 
-}
-
-char *to_char(UDF_INIT *initid, UDF_ARGS *args, unsigned char *is_null,
-              char *message, unsigned long *length) {
-    // 如果为空，返回 NULL
+char *to_char(UDF_INIT *initid, UDF_ARGS *args, char *result,
+              unsigned long *length, char *is_null, char *error) {
+    //如果为空，返回 NULL
     if (!args->args[0]) {
         *is_null = 1;
         return NULL;
     }
 
     switch (args_count) {
-        case 0: {
-            strcpy(message, "ERROR: no parameter");
-            break;
-        }
         case 1: {
-            convert(args->args[0], message);
+            convert_str(args->args[0], result);
             break;
         }
         case 2: {
-            convert(args->args[0], args->args[1], message);
-            break;
-        }
-        default: {
-            strcpy(message,
-                   "wrong number of the args: to_char() requires one or two "
-                   "arguments");
+            convert_str(args->args[0], args->args[1], result);
             break;
         }
     }
-    *length = strlen(message);
+    *length = strlen(result);
     is_string = 0;
     is_num = 0;
-    return message;
+    return result;
 }
