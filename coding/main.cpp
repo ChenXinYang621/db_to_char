@@ -112,16 +112,17 @@ void convert_str(char *str, char *result) {
     }
 }
 
-void convert_str(char *str1, char *str2, char *result) {}
+void convert_str(char *str1, char *str2, char *result) {
+    strcpy(result, "ERROR: fmt wrong");
+}
 
 // 检查是否存在非法条件数
-bool str_check(string str) {}
+// bool str_check(string str) {}
 
 bool fmt_check(string str) {
     // 判断格式化输出格式是否符合标准
     // 转为小写，方便进行判断
-    transform(str.begin(), str.end(), str.begin(), ::tolower);
-    int dollar_flag = count(str.begin(), str.end(), '$');
+    dollar_flag = count(str.begin(), str.end(), '$');
     int cnt_s = count(str.begin(), str.end(), 's');
     int cnt_d = count(str.begin(), str.end(), 'd');
     int cnt_dot = count(str.begin(), str.end(), '.');
@@ -163,21 +164,8 @@ bool fmt_check(string str) {
     }
 
     // 正确的字母
-    char right_letter[5] = {'0', '9', '$', '.', 'd'};
+    char right_letter[6] = {'0', '9', '$', '.', 'd', ','};
 
-    // for (int i = 0; i < str.length(); i++) {
-    //     if (i != 0) {
-    //         if (str[i] == '$') {
-    //             continue;
-    //         }
-    //     } else if (i == 0) {
-    //         if (str[i] == 'S') {
-    //         }
-    //     }
-    // }
-
-    // if (cnt_s == 1) {
-    // }
     int start = 0;
     int end = length;
     if (cnt_s == 1) {
@@ -203,10 +191,27 @@ bool fmt_check(string str) {
             return false;
         }
     }
-    // for (int i = start; i < end; i++) {
-    //     int j = 0;
-    //     for (j = 0; j <)
-    // }
+    for (int i = start; i < end; i++) {
+        int j = 0;
+        int number_flag = 0;
+        for (j = 0; j < 6; i++) {
+            if (str[i] == right_letter[j]) {
+                break;
+            }
+        }
+        if (j == 6) {
+            return false;
+        }
+        if (j == 0 || j == 1) {
+            number_flag++;
+        }
+        if (j == 5) {
+            if (!number_flag) {
+                return false;
+            }
+            number_flag = 0;
+        }
+    }
 
     return true;
 }

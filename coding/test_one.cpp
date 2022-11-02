@@ -1,78 +1,113 @@
+#include <algorithm>
 #include <cstring>
 #include <iostream>
 
 using namespace std;
 
-int is_string = 0;
+int dollar_flag = 0;
+int dot_position2 = -1;
+int number_int2 = 0;
 
-void convert_str(char *str, char *result) {
-    if (is_string) {
-        strcpy(result, str);
-    } else {
-        int length = strlen(str);
-        // 判断小数点
-        int cnt = 0;
+bool fmt_check(string str) {
+    // 判断格式化输出格式是否符合标准
+    // 转为小写，方便进行判断
+    dollar_flag = count(str.begin(), str.end(), '$');
+    int cnt_s = count(str.begin(), str.end(), 's');
+    int cnt_d = count(str.begin(), str.end(), 'd');
+    int cnt_dot = count(str.begin(), str.end(), '.');
+    int cnt_0 = count(str.begin(), str.end(), '0');
+    int cnt_9 = count(str.begin(), str.end(), '9');
 
-        char *pos_str = str;
-        char *pos_result = result;
-        // str 最后一个位置
-        char *pos_str_end = str + length - 1;
+    // 通过 find 方法统计 "mi" 和 "pr"
+    int i = 0;
+    int cnt_mi = 0;
+    int length = str.length();
+    while (str.find("mi", i) != string::npos) {
+        cnt_mi++;
+        i = str.find("mi", i) + 1;
+    }
+    int cnt_pr = 0;
+    while (str.find("pr", i) != string::npos) {
+        cnt_pr++;
+        i = str.find("pr", i) + 1;
+    }
 
-        for (int i = 0; i < length; i++) {
-            if (str[i] == '.') {
-                cnt = 1;
+    if (cnt_dot) {
+        dot_position2 = str.find(".");
+    } else if (cnt_d) {
+        dot_position2 = str.find("d");
+    }
+
+    // 各种限制条件的判断
+    if (cnt_s > 1 || cnt_mi > 1 || cnt_pr > 1 || dollar_flag > 1 || cnt_d > 1 ||
+        cnt_dot > 1 || (cnt_dot == cnt_d == 1) || (cnt_s == cnt_mi == 1) ||
+        (cnt_s == cnt_pr == 1) || (cnt_mi == cnt_pr == 1)) {
+        return false;
+    }
+
+    // 统计整数部分的数量
+    for (int i = 0; str[i] != 'd' || str[i] != '.'; i++) {
+        if (str[i] == '9' || str[i] == '0') {
+            number_int2++;
+        }
+    }
+
+    // 正确的字母
+    char right_letter[6] = {'0', '9', '$', '.', 'd', ','};
+
+    int start = 0;
+    int end = length;
+    if (cnt_s == 1) {
+        if (str.find("s") == 0) {
+            start++;
+        } else if (str.find("s") == length - 1) {
+            end--;
+        } else {
+            return false;
+        }
+    }
+    if (cnt_pr == 1) {
+        if (str.find("pr") == length - 2) {
+            end -= 2;
+        } else {
+            return false;
+        }
+    }
+    if (cnt_mi == 1) {
+        if (str.find("mi") == length - 2) {
+            end -= 2;
+        } else {
+            return false;
+        }
+    }
+    for (int i = start; i < end; i++) {
+        int j = 0;
+        int number_flag = 0;
+        for (j = 0; j < 6; i++) {
+            if (str[i] == right_letter[j]) {
                 break;
             }
         }
-        // 对浮点数去除末尾 0/' '
-        if (cnt) {
-            // 去除末尾的 0/' ' 一直到非零数字或者'.'
-            while (*pos_str_end == ' ' || *pos_str_end == '.' ||
-                   *pos_str_end == '0') {
-                pos_str_end--;
-                if ( *(pos_str_end + 1) == '.') {
-                    break;
-                }
+        if (j == 6) {
+            return false;
+        }
+        if (j == 0 || j == 1) {
+            number_flag++;
+        }
+        if (j == 5) {
+            if (!number_flag) {
+                return false;
             }
+            number_flag = 0;
         }
-        pos_str_end++;
-        
-        // 去除前面的空格
-        while (*pos_str == ' ') {
-            pos_str++;
-        }
-        // 有 '-' 需要额外赋值
-        if (*pos_str == '-') {
-            *pos_result = *pos_str;
-            pos_str++;
-            pos_result++;
-        }
-        // 去除首部多余的 0
-        while (*pos_str == '0') {
-            pos_str++;
-        }
-        while (pos_str != pos_str_end) {
-            *pos_result = *pos_str;
-            pos_str++;
-            pos_result++;
-        }
-
-        // 在去除多于数字之后如果没有数字，用 0 表示
-        if (!strlen(result)) {
-            strcpy(result, "0");
-        }
-        for (int i = 0; i < strlen(result); i++) {
-            cout << *result;
-            result++;
-        }
-        cout << endl;
     }
+
+    return true;
 }
 
 int main() {
-    char *result;
-    char *source = "123.123";
-    convert_str(source, result);
+    bool a = fmt_check("9");
+    cout << a << endl;
 
     return 0;
 }
