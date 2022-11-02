@@ -10,6 +10,7 @@
         "sstream": "cpp",
         "algorithm": "cpp",
         "cstdlib": "cpp",
-        "cstring": "cpp"
+        "cstring": "cpp",
+        "iostream": "cpp"
     }
 }
