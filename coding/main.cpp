@@ -31,9 +31,6 @@ int dot_position2 = -1;
 // 判断 $
 int dollar_flag = 0;
 
-// 判断为数字
-bool is_number(const char *str) { return *str >= '0' && *str <= '9'; }
-
 int is_num = 0;
 // 原数据是否为 string 类型
 int is_string = 0;
@@ -112,7 +109,31 @@ void convert_str(char *str, char *result) {
     }
 }
 
+bool number_check(char *str) {
+    
+}
+
 void convert_str(char *str1, char *str2, char *result) {
+    if (is_num) {
+        convert_str(str1, result);
+    } else if (is_string) {
+        if ()
+    }
+
+    char *pos_result = result;
+
+    // 整数位数不足的情况
+    if (number_int > number_int2) {
+        for (int i = 0; i < number_int; i++) {
+            *pos_result = '#';
+            pos_result++;
+        }
+        if (dollar_flag) {
+            *pos_result = '#';
+        }
+        return;
+    }
+
     strcpy(result, "ERROR: fmt wrong");
 }
 
@@ -130,19 +151,20 @@ bool fmt_check(string str) {
     int cnt_9 = count(str.begin(), str.end(), '9');
 
     // 通过 find 方法统计 "mi" 和 "pr"
-    int i = 0;
+    int init_point = 0;
     int cnt_mi = 0;
     int length = str.length();
-    while (str.find("mi", i) != string::npos) {
+    while (str.find("mi", init_point) != string::npos) {
         cnt_mi++;
-        i = str.find("mi", i) + 1;
+        init_point = str.find("mi", init_point) + 1;
     }
     int cnt_pr = 0;
-    while (str.find("pr", i) != string::npos) {
+    init_point = 0;
+    while (str.find("pr", init_point) != string::npos) {
         cnt_pr++;
-        i = str.find("pr", i) + 1;
+        init_point = str.find("pr", init_point) + 1;
     }
-
+    // 查询小数位置
     if (cnt_dot) {
         dot_position2 = str.find(".");
     } else if (cnt_d) {
@@ -151,13 +173,14 @@ bool fmt_check(string str) {
 
     // 各种限制条件的判断
     if (cnt_s > 1 || cnt_mi > 1 || cnt_pr > 1 || dollar_flag > 1 || cnt_d > 1 ||
-        cnt_dot > 1 || (cnt_dot == cnt_d == 1) || (cnt_s == cnt_mi == 1) ||
-        (cnt_s == cnt_pr == 1) || (cnt_mi == cnt_pr == 1)) {
+        cnt_dot > 1 || (cnt_dot == 1 && cnt_d == 1) ||
+        (cnt_s == 1 && cnt_mi == 1) || (cnt_s == 1 && cnt_pr == 1) ||
+        (cnt_mi == 1 && cnt_pr == 1)) {
         return false;
     }
 
     // 统计整数部分的数量
-    for (int i = 0; str[i] != 'd' || str[i] != '.'; i++) {
+    for (int i = 0; i < length && (str[i] != 'd' || str[i] != '.'); i++) {
         if (str[i] == '9' || str[i] == '0') {
             number_int2++;
         }
@@ -191,10 +214,11 @@ bool fmt_check(string str) {
             return false;
         }
     }
+    // char right_letter[6] = {'0', '9', '$', '.', 'd', ','};
+    int number_flag = 0;
     for (int i = start; i < end; i++) {
         int j = 0;
-        int number_flag = 0;
-        for (j = 0; j < 6; i++) {
+        for (j = 0; j < 6; j++) {
             if (str[i] == right_letter[j]) {
                 break;
             }
