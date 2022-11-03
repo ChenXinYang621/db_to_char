@@ -109,7 +109,7 @@ bool fmt_check(string str) {
 }
 
 int main() {
-    bool a = fmt_check("9999");
+    bool a = fmt_check(".,99");
     cout << a << endl;
 
     return 0;
