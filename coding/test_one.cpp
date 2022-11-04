@@ -8,25 +8,31 @@ int dollar_flag = 0;
 int dot_position2 = -1;
 int number_int2 = 0;
 
+int cnt_s = 0;
+int cnt_d = 0;
+int cnt_dot = 0;
+int cnt_0 = 0;
+int cnt_9 = 0;
+int cnt_mi = 0;
+int cnt_pr = 0;
+
 bool fmt_check(string str) {
     // 判断格式化输出格式是否符合标准
     // 转为小写，方便进行判断
     dollar_flag = count(str.begin(), str.end(), '$');
-    int cnt_s = count(str.begin(), str.end(), 's');
-    int cnt_d = count(str.begin(), str.end(), 'd');
-    int cnt_dot = count(str.begin(), str.end(), '.');
-    int cnt_0 = count(str.begin(), str.end(), '0');
-    int cnt_9 = count(str.begin(), str.end(), '9');
+    cnt_s = count(str.begin(), str.end(), 's');
+    cnt_d = count(str.begin(), str.end(), 'd');
+    cnt_dot = count(str.begin(), str.end(), '.');
+    cnt_0 = count(str.begin(), str.end(), '0');
+    cnt_9 = count(str.begin(), str.end(), '9');
 
     // 通过 find 方法统计 "mi" 和 "pr"
     int init_point = 0;
-    int cnt_mi = 0;
     int length = str.length();
     while (str.find("mi", init_point) != string::npos) {
         cnt_mi++;
         init_point = str.find("mi", init_point) + 1;
     }
-    int cnt_pr = 0;
     init_point = 0;
     while (str.find("pr", init_point) != string::npos) {
         cnt_pr++;
@@ -98,7 +104,8 @@ bool fmt_check(string str) {
             number_flag++;
         }
         if (j == 5) {
-            if (!number_flag) {
+            if (!number_flag && !(i > 0 && str[i - 1] == ',') ||
+                (dot_position2 != -1 && dot_position2 < i)) {
                 return false;
             }
             number_flag = 0;

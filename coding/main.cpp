@@ -41,8 +41,6 @@ int args_count = 0;
 int cnt_s = 0;
 int cnt_d = 0;
 int cnt_dot = 0;
-int cnt_0 = 0;
-int cnt_9 = 0;
 int cnt_mi = 0;
 int cnt_pr = 0;
 
@@ -65,7 +63,9 @@ char *standard(char *str) {
 
 void string_lower(char *str) {
     for (int i = 0; i < strlen(str); i++) {
-        if (str[i] >= 'A' && str[i] <= 'Z') str[i] += 32;
+        if (str[i] >= 'A' && str[i] <= 'Z') {
+            str[i] += 32;
+        }
     }
 }
 
@@ -158,7 +158,7 @@ bool number_check(char *str) {
     }
 
     // 统计 '.' 个数
-    int cnt = count(temp.begin(), temp.end(), ".");
+    int cnt = count(temp.begin(), temp.end(), '.');
     if (cnt > 1) {
         return false;
     }
@@ -186,7 +186,7 @@ bool match(char *str1, char *str2) {
     char *pos_str;
     char *pos_fmt;
     // 四舍五入位
-    int up = 0;
+    int up_flag = 0;
     int is_dot = 1;
     int is_error = 0;
     char *str_start;
@@ -262,17 +262,17 @@ bool match(char *str1, char *str2) {
             pos_fmt++;
         }
         if (*pos_str >= '5') {
-            up = 1;
+            up_flag = 1;
             pos_fmt--;
         }
     }
-    while (up && pos_fmt != dot_fmt) {
+    while (up_flag && pos_fmt != dot_fmt) {
         // '9' 的情况需要额外考虑进位问题
         if (*pos_fmt == '9') {
             *pos_fmt = '0';
         } else {
             *pos_fmt = *pos_fmt + 1;
-            up = 0;
+            up_flag = 0;
         }
         pos_fmt--;
     }
@@ -282,16 +282,16 @@ bool match(char *str1, char *str2) {
     pos_str = dot_str - 1;
 
     // 进行整数部分的进位
-    while (up && pos_str != str_start) {
+    while (up_flag && pos_str != str_start) {
         if (*pos_str == '9') {
             *pos_str = '0';
         } else {
             *pos_str = *pos_str + 1;
-            up = 0;
+            up_flag = 0;
         }
         pos_str--;
     }
-    if (up) {
+    if (up_flag) {
         // 存在 '.8' 的情况
         int k;
         if (str1[0] == '-') {
@@ -387,8 +387,8 @@ bool match(char *str1, char *str2) {
         // 添加 "<>"
         if (str1[0] == '-') {
             *pos_fmt = '<';
-            *(str1 + len_fmt) = '>';
-            *(str1 + len_fmt + 1) = '\0';
+            *(str2 + len_fmt) = '>';
+            *(str2 + len_fmt + 1) = '\0';
         }
     } else if (str1[0] == '-')
         *pos_fmt = '-';
@@ -412,147 +412,99 @@ bool match(char *str1, char *str2) {
             str2[i] = '#';
         }
     }
-    return 1;
+    return true;
 }
 
 void convert_str(char *str1, char *str2, char *result) {
-    char *temp;
+    string_lower(str2);
     if (!is_string) {
-        convert_str(str1, temp);
+        convert_str(str1, result);
     } else {
         if (!number_check(str1)) {
             strcpy(result, "ERROR: please input a number");
             return;
         } else {
             is_string = 0;
-            convert_str(str1, temp);
+            convert_str(str1, result);
         }
     }
 
-    tmp = (char *)malloc(strlen(str2));
-
+    str2 = standard(str2);
     if (match(str1, str2)) {
         strcpy(result, str2);
     } else {
         strcpy(result, "ERROR: fmt wrong");
     }
-
-    // char *pos_result = result;
-
-    // // 整数位数不足的情况
-    // if (number_int > number_int2) {
-    //     for (int i = 0; i < number_int; i++) {
-    //         *pos_result = '#';
-    //         pos_result++;
-    //     }
-    //     if (dollar_flag) {
-    //         *pos_result = '#';
-    //     }
-    //     return;
-    // }
-
-    // strcpy(result, "ERROR: fmt wrong");
 }
 
 // 检查是否存在非法条件数
 // bool str_check(string str) {}
 
-bool fmt_check(string str) {
-    // 判断格式化输出格式是否符合标准
-    // 转为小写，方便进行判断
-    dollar_flag = count(str.begin(), str.end(), '$');
-    cnt_s = count(str.begin(), str.end(), 's');
-    cnt_d = count(str.begin(), str.end(), 'd');
-    cnt_dot = count(str.begin(), str.end(), '.');
-    cnt_0 = count(str.begin(), str.end(), '0');
-    cnt_9 = count(str.begin(), str.end(), '9');
-
-    // 通过 find 方法统计 "mi" 和 "pr"
-    int init_point = 0;
-    int length = str.length();
-    while (str.find("mi", init_point) != string::npos) {
-        cnt_mi++;
-        init_point = str.find("mi", init_point) + 1;
-    }
-    init_point = 0;
-    while (str.find("pr", init_point) != string::npos) {
-        cnt_pr++;
-        init_point = str.find("pr", init_point) + 1;
-    }
-    // 查询小数位置
-    if (cnt_dot) {
-        dot_position2 = str.find(".");
-    } else if (cnt_d) {
-        dot_position2 = str.find("d");
-    }
-
-    // 各种限制条件的判断
-    if (cnt_s > 1 || cnt_mi > 1 || cnt_pr > 1 || dollar_flag > 1 || cnt_d > 1 ||
-        cnt_dot > 1 || (cnt_dot == 1 && cnt_d == 1) ||
-        (cnt_s == 1 && cnt_mi == 1) || (cnt_s == 1 && cnt_pr == 1) ||
-        (cnt_mi == 1 && cnt_pr == 1)) {
-        return false;
-    }
-
-    // 统计整数部分的数量
-    for (int i = 0; i < length && (str[i] != 'd' || str[i] != '.'); i++) {
-        if (str[i] == '9' || str[i] == '0') {
-            number_int2++;
+// 检查格式化字符串
+bool fmt_check(char *str) {
+    char letter[] = {'.', ',', 'd', 'm', 'i', 'p', 'r', 's', '$', '0', '9'};
+    int len = strlen(str);
+    for (int i = 0; i < len; i++) {
+        int letter_flag = 0;
+        if (str[i] == '.' || str[i] == 'd') {
+            cnt_dot++;
+            str[i] = '.';
         }
-    }
-
-    // 正确的字母
-    char right_letter[6] = {'0', '9', '$', '.', 'd', ','};
-
-    int start = 0;
-    int end = length;
-    if (cnt_s == 1) {
-        if (str.find("s") == 0) {
-            start++;
-        } else if (str.find("s") == length - 1) {
-            end--;
-        } else {
-            return false;
+        if (str[i] == '$') {
+            dollar_flag++;
         }
-    }
-    if (cnt_pr == 1) {
-        if (str.find("pr") == length - 2) {
-            end -= 2;
-        } else {
-            return false;
-        }
-    }
-    if (cnt_mi == 1) {
-        if (str.find("mi") == length - 2) {
-            end -= 2;
-        } else {
-            return false;
-        }
-    }
-    // char right_letter[6] = {'0', '9', '$', '.', 'd', ','};
-    int number_flag = 0;
-    for (int i = start; i < end; i++) {
-        int j = 0;
-        for (j = 0; j < 6; j++) {
-            if (str[i] == right_letter[j]) {
+        for (int j = 0; j < strlen(letter); j++) {
+            if (str[i] == letter[j]) {
+                letter_flag = 1;
                 break;
             }
         }
-        if (j == 6) {
+        if (!letter_flag) {
             return false;
-        }
-        if (j == 0 || j == 1) {
-            number_flag++;
-        }
-        if (j == 5) {
-            if (!number_flag && !(i > 0 && str[i - 1] == ',') ||
-                (dot_position2 != -1 && dot_position2 < i)) {
-                return false;
-            }
-            number_flag = 0;
         }
     }
 
+    if (cnt_dot > 1 || dollar_flag > 1) {
+        return false;
+    }
+    if (str[0] == 'm' || str[0] == 'i' || str[0] == 'p' || str[0] == 'r') {
+        return false;
+    }
+
+    if (str[0] == 's') {
+        cnt_s = 1;
+    }
+
+    for (int i = 1; i < len; i++) {
+        if (str[i] == 'm') {
+            if (str[i + 1] == 'i' && str[i + 2] == '\0') {
+                cnt_mi = 1;
+            } else {
+                return false;
+            }
+        }
+        if (str[i] == 'p') {
+            if (str[i + 1] == 'r' && str[i + 2] == '\0') {
+                cnt_pr = 1;
+            } else {
+                return false;
+            }
+        }
+        if (str[i] == 's') {
+            if (!cnt_s && str[i + 1] == '\0') {
+                cnt_s = 2;
+            } else {
+                return 0;
+            }
+        }
+        if ((str[i] == 'i' && str[i - 1] != 'm') ||
+            str[i] == 'r' && str[i - 1] != 'p') {
+            return false;
+        }
+    }
+    if ((cnt_mi && cnt_pr) || (cnt_pr && cnt_s) || (cnt_s && cnt_mi)) {
+        return false;
+    }
     return true;
 }
 
@@ -569,33 +521,35 @@ bool to_char_init(UDF_INIT *initid, UDF_ARGS *args, char *message) {
     }
 
     // string 或 num
-    if (args->arg_type[0] == Item_result::STRING_RESULT) {
+    if (args->arg_type[0] == STRING_RESULT)
         is_string = 1;
-    } else {
+    else if (args->arg_type[0] == INT_RESULT ||
+             args->arg_type[1] == DECIMAL_RESULT) {
         is_num = 1;
     }
     if (args_count == 2) {
-        string_lower(args->args[1]);
+        // string_lower(args->args[1]);
         if (args->arg_type[1] != Item_result::STRING_RESULT) {
             strcpy(message,
                    "ERROR: wrong type of the args, the second need to be "
                    "string");
             return true;
         }
-        if (!fmt_check(string(args->args[1]))) {
+        if (!fmt_check(args->args[1])) {
             strcpy(message, "ERROR: wrong content of the fmt");
             return true;
         }
     }
     // 一定要强转，否则会出现只能读取一个的问题
     args->arg_type[0] = Item_result::STRING_RESULT;
+    tmp = (char *)malloc(255);
     return false;
 }
 
 // 需要指定输出的 length
 char *to_char(UDF_INIT *initid, UDF_ARGS *args, char *result,
               unsigned long *length, char *is_null, char *error) {
-    //如果为空，返回 NULL
+    // 如果为空，返回 NULL
     if (!args->args[0]) {
         *is_null = 1;
         return NULL;
@@ -612,6 +566,7 @@ char *to_char(UDF_INIT *initid, UDF_ARGS *args, char *result,
         }
     }
     *length = strlen(result);
+
     is_string = 0;
     is_num = 0;
     cnt_dot = 0;
@@ -619,7 +574,8 @@ char *to_char(UDF_INIT *initid, UDF_ARGS *args, char *result,
     cnt_s = 0;
     cnt_mi = 0;
     cnt_pr = 0;
+
     return result;
 }
 
-void to_char_deinit(UDF_INIT *initid) { free(tmp); } 
+void to_char_deinit(UDF_INIT *initid) { free(tmp); }
