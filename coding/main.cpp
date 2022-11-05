@@ -18,18 +18,6 @@ bool to_char_init(UDF_INIT *initid, UDF_ARGS *args, char *message);
 void to_char_deinit(UDF_INIT *initid);
 }
 
-// 整数部分的位数
-int number_int = 0;
-// 第二个参数整数部分
-int number_int2 = 0;
-// 小数部分的位数
-int number_double = 0;
-// 判断负数情况
-int flag = 0;
-// 判断小数点（第一个参数）
-int dot_position = -1;
-// 判断小数点（第二个参数）
-int dot_position2 = -1;
 // 判断 $
 int dollar_flag = 0;
 
@@ -74,6 +62,8 @@ void convert_str(char *str, char *result) {
         strcpy(result, str);
     } else {
         int length = strlen(str);
+        int dot_position = -1;
+        int flag = 0;
 
         char *pos_str = str;
         char *pos_result = result;
@@ -126,17 +116,6 @@ void convert_str(char *str, char *result) {
         if (!result_length) {
             strcpy(result, "0");
             return;
-        }
-
-        // 开始判断位数
-        if (dot_position == -1) {
-            number_int = result_length;
-        } else {
-            number_int = dot_position;
-            number_double = result_length - dot_position;
-        }
-        if (flag == 1) {
-            number_int--;
         }
     }
 }
@@ -442,6 +421,7 @@ void convert_str(char *str1, char *str2, char *result) {
 
 // 检查格式化字符串
 bool fmt_check(char *str) {
+    string_lower(str);
     char letter[] = {'.', ',', 'd', 'm', 'i', 'p', 'r', 's', '$', '0', '9'};
     int len = strlen(str);
     for (int i = 0; i < len; i++) {
@@ -542,7 +522,7 @@ bool to_char_init(UDF_INIT *initid, UDF_ARGS *args, char *message) {
     }
     // 一定要强转，否则会出现只能读取一个的问题
     args->arg_type[0] = Item_result::STRING_RESULT;
-    tmp = (char *)malloc(255);
+    tmp = (char *)malloc(strlen(args->args[0]));
     return false;
 }
 
